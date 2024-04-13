@@ -1,6 +1,11 @@
 from flask import Flask, request
 from flask_cors import CORS
 from ai_functions import *
+from telethon.sync import TelegramClient
+
+api_id = 0
+api_hash = ''
+client = TelegramClient('@abcd', api_id, api_hash)
 
 app = Flask(__name__)
 CORS(app)
@@ -29,8 +34,8 @@ database = {
 @app.route("/chats", methods = ["GET"])
 def get_all_chats():
     chats = []
-    for chat_id in database:
-        chats.append({"chat_id": chat_id,"user":database[chat_id].get("name")})
+    for dialog in client.iter_dialogs():
+        chats.append({"chat_id": dialog.id,"user":dialog.name})
     return chats
 
 @app.route("/messages/<chat_id>", methods = ["GET"])
