@@ -5,10 +5,19 @@ from telethon.sync import TelegramClient
 
 api_id = 0
 api_hash = ''
-client = TelegramClient('@abcd', api_id, api_hash)
+client = TelegramClient('@abc', api_id, api_hash)
 
 app = Flask(__name__)
 CORS(app)
+
+# Enable CORS for all routes
+@app.after_request
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    return response
+
 
 database = {
     "chat_1":{
@@ -32,9 +41,10 @@ database = {
 }
 
 @app.route("/chats", methods = ["GET"])
-def get_all_chats():
+async def get_all_chats():
+    await client.connect()
     chats = []
-    for dialog in client.iter_dialogs():
+    async for dialog in client.iter_dialogs():
         chats.append({"chat_id": dialog.id,"user":dialog.name})
     return chats
 
@@ -58,5 +68,9 @@ def post_message():
     return "Message was added"
 
 
+# passauit
+# async def main():
+#     app.run(debug=True)
 
-    
+if __name__ == "__main__":
+    client.loop.run_until_complete(app.run(debug=True))
