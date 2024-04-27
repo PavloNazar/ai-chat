@@ -2,6 +2,8 @@ from flask import Flask, request
 from flask_cors import CORS
 from ai_functions import *
 from telethon.sync import TelegramClient
+from telethon.types import PeerUser, MessageService
+
 
 api_id = 0
 api_hash = ''
@@ -49,8 +51,25 @@ async def get_all_chats():
     return chats
 
 @app.route("/messages/<chat_id>", methods = ["GET"])
-def get_all_messages_from_chats(chat_id):
-    return database[chat_id].get("messages")
+async def get_all_messages_from_chats(chat_id):
+    chat_id = int(chat_id)
+    await client.connect()
+    messages = []
+    async for message in client.iter_messages(chat_id):
+        if isinstance(message, MessageService):
+            continue
+        user = None
+        if message.from_id is None:
+            user = message.peer_id
+        else:
+            user = message.from_id
+        my_user = await client.get_entity(user)
+        print(my_user.first_name, message.message)
+        
+        messages.append(str(message))
+    return messages
+
+       
 
 @app.route("/suggestions/<chat_id>", methods = ["GET"])
 def get_all_suggestions(chat_id):
