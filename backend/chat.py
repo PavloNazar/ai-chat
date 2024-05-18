@@ -3,11 +3,16 @@ from flask_cors import CORS
 from ai_functions import *
 from telethon.sync import TelegramClient
 from telethon.types import PeerUser, MessageService
+from telethon.types import InputMessagesFilterChatPhotos
+from dotenv import load_dotenv
+import os
 
 
-api_id = 0
-api_hash = ''
-client = TelegramClient('@abc', api_id, api_hash)
+load_dotenv()
+
+api_id = os.getenv("API_ID")
+api_hash = os.getenv("API_HASH")
+client = TelegramClient(os.getenv("TELE_NAME"), api_id, api_hash)
 
 app = Flask(__name__)
 CORS(app)
@@ -44,18 +49,22 @@ database = {
 
 @app.route("/chats", methods = ["GET"])
 async def get_all_chats():
-    await client.connect()
-    chats = []
-    async for dialog in client.iter_dialogs():
-        chats.append({"chat_id": dialog.id,"user":dialog.name})
-    return chats
+    async with client:
+        # await client.connect()
+        chats = []
+        async for dialog in client.iter_dialogs():
+            chats.append({"chat_id": dialog.id,"user":dialog.name})
+        # await client.disconnect()
+        return chats
 
 @app.route("/messages/<chat_id>", methods = ["GET"])
 async def get_all_messages_from_chats(chat_id):
+    
     chat_id = int(chat_id)
     await client.connect()
     messages = []
-    async for message in client.iter_messages(chat_id):
+    async for message in client.iter_messages(chat_id, limit=40):
+        first_name = "Me"
         if isinstance(message, MessageService):
             continue
         user = None
@@ -66,7 +75,13 @@ async def get_all_messages_from_chats(chat_id):
         my_user = await client.get_entity(user)
         print(my_user.first_name, message.message)
         
-        messages.append(str(message))
+        # messages.append(str(message))
+        if message.message == "":
+            continue
+        if message.from_id is None:
+            first_name = my_user.first_name
+        messages.append({"user":first_name, "message":message.message})
+    messages.reverse()
     return messages
 
        
