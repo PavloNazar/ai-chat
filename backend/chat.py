@@ -1,5 +1,5 @@
-from flask import Flask, request
-from flask_cors import CORS
+from quart import Quart, request
+from quart_cors import cors
 from ai_functions import *
 from telethon.sync import TelegramClient
 from telethon.types import PeerUser, MessageService
@@ -14,16 +14,16 @@ api_id = os.getenv("API_ID")
 api_hash = os.getenv("API_HASH")
 client = TelegramClient(os.getenv("TELE_NAME"), api_id, api_hash)
 
-app = Flask(__name__)
-CORS(app)
+app = Quart(__name__)
+app = cors(app, allow_origin="*")
 
 # Enable CORS for all routes
-@app.after_request
-def add_cors_headers(response):
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
-    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-    return response
+# @app.after_request
+# def add_cors_headers(response):
+#     response.headers['Access-Control-Allow-Origin'] = '*'
+#     response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+#     response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+#     return response
 
 
 database = {
@@ -47,20 +47,7 @@ database = {
     }
 }
 
-@app.route("/chats", methods = ["GET"])
-async def get_all_chats():
-    async with client:
-        # await client.connect()
-        chats = []
-        async for dialog in client.iter_dialogs():
-            chats.append({"chat_id": dialog.id,"user":dialog.name})
-        # await client.disconnect()
-        return chats
-
-@app.route("/messages/<chat_id>", methods = ["GET"])
-async def get_all_messages_from_chats(chat_id):
-    
-    chat_id = int(chat_id)
+async def get_messages_by_chat_id(chat_id):
     await client.connect()
     messages = []
     async for message in client.iter_messages(chat_id, limit=40):
@@ -73,7 +60,7 @@ async def get_all_messages_from_chats(chat_id):
         else:
             user = message.from_id
         my_user = await client.get_entity(user)
-        print(my_user.first_name, message.message)
+        
         
         # messages.append(str(message))
         if message.message == "":
@@ -84,20 +71,41 @@ async def get_all_messages_from_chats(chat_id):
     messages.reverse()
     return messages
 
+@app.route("/chats", methods = ["GET"])
+async def get_all_chats():
+    async with client:
+        # await client.connect()
+        chats = []
+        async for dialog in client.iter_dialogs():
+            if dialog.is_user == True:
+                chats.append({"chat_id": dialog.id,"user":dialog.name})
+        # await client.disconnect()
+        return chats
+
+@app.route("/messages/<chat_id>", methods = ["GET"])
+async def get_all_messages_from_chats(chat_id):
+    
+    chat_id = int(chat_id)
+    messages = await get_messages_by_chat_id(chat_id)
+    
+    return messages
+
        
 
 @app.route("/suggestions/<chat_id>", methods = ["GET"])
-def get_all_suggestions(chat_id):
-    messages = database[chat_id].get("messages")
+async def get_all_suggestions(chat_id):
+    chat_id = int(chat_id)
+    messages = await get_messages_by_chat_id(chat_id)
     return generate_chat_suggestion(messages)
 
 @app.route("/message", methods = ["POST"])
-def post_message():
-    chat_id: str = request.form["chat_id"]
-    name: str = request.form["name"]
-    message: str = request.form["message"]
-    messages = database[chat_id].get("messages")
-    messages.append({"user":name,"message":message})
+async def post_message():
+    await client.connect()
+    chat_id: int = int((await request.form)["chat_id"])
+    # name: str = (await request.form)["name"]
+    message: str = (await request.form)["message"]
+    await client.send_message(chat_id, message)
+    
 
     return "Message was added"
 

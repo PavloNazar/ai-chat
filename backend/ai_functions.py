@@ -7,7 +7,7 @@ def generate_chat_suggestion(chat: []) -> list[str]:
     messages = ""
     for i in range(len(chat)):    
         messages += chat[i]['user'] + ":"+ chat[i]['message'] + "\n"
-    prompt = "Based on this conversation -> \n"+messages+". Create 3 different responses (only my answers),how i can continue this conversation."
+    prompt = "Based on this conversation and on the language of it -> \n"+messages+". Create 3 different responses (only answers from Me),how i can continue this conversation."
 
     stream = client.chat.completions.create(
         model="gpt-4",
