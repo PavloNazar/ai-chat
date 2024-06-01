@@ -177,6 +177,11 @@
         .suggestion:hover{
             background-color: rgb(182, 182, 182);
         }
+        .sugg-preloader{
+            margin: auto;
+            display: block;
+            margin-top: 18%;
+        }
         </style>
         
             
@@ -321,13 +326,13 @@
     
         const suggestions = document.querySelectorAll(".suggestion");
 
+        const inputText = document.querySelector(".input-text");
+
         suggestions.forEach(function(suggestion) {
             suggestion.addEventListener("click", function() {
                 const elementP = suggestion.querySelector("p")
 
                 const textFromSuggestion = elementP.innerText
-
-                const inputText = document.querySelector(".input-text");
 
                 inputText.value = textFromSuggestion;
             });
@@ -337,6 +342,7 @@
 
         button.addEventListener("click", function(){
             sendMessage()
+            inputText.value = "";
         })
 
         

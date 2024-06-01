@@ -1,3 +1,5 @@
+let intervalId;
+
 function drawPeople(data){
     const people = document.querySelector(".people")
 
@@ -32,7 +34,11 @@ function drawPeople(data){
             personsArticle.classList.add("selected")
             const chatId = personsArticle.getAttribute("id")
 
-            getChat(personsArticle)
+            if (intervalId != null){
+                clearInterval(intervalId);
+            }
+
+            intervalId = setInterval(function () {getChat(personsArticle)}, 3000);
             getSuggestions(chatId)
 
         })
@@ -126,11 +132,33 @@ function drawSuggestions(data){
     const suggestions = document.querySelectorAll(".suggestion")
 
     for(let i = 0; i < suggestions.length; i++){
+        suggestions[i].innerHTML = "";
+        const suggNumber = document.createElement("h1")
+        const suggText = document.createElement("p")
+
+        suggNumber.textContent = "Sg "+(i+1)+":" 
+        suggestions[i].appendChild(suggNumber)
+        suggestions[i].appendChild(suggText)
         suggestions[i].children[1].textContent = data[i]
     }
+    
+}
+// ==================================================================
+function drawPreloader(){
+    const suggestions = document.querySelectorAll(".suggestion")
+    for(let i = 0; i < suggestions.length; i++){
+        suggestions[i].innerHTML = "";
+        const preloader = document.createElement("img")
+        preloader.classList.add("sugg-preloader")
+        preloader.setAttribute("src","img/preloader.gif")
+        suggestions[i].appendChild(preloader)
+        
+    }
+
 }
 
 function getSuggestions(chatId){
+    drawPreloader();
     const HTTP = new XMLHttpRequest();
     const url = "http://127.0.0.1:5000/suggestions/" + chatId;
     HTTP.open("GET", url);
