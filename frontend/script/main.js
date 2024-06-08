@@ -38,7 +38,10 @@ function drawPeople(data){
                 clearInterval(intervalId);
             }
 
-            intervalId = setInterval(function () {getChat(personsArticle)}, 3000);
+            drawChatPreloader()
+
+            
+            firstLoadChat(personsArticle)
             getSuggestions(chatId)
 
         })
@@ -46,7 +49,28 @@ function drawPeople(data){
     }
 }
 
+function drawChatPreloader(){
+    const chat = document.querySelector(".chat")
+    
+    const chatPreloaderGif = document.createElement("img")
+    chatPreloaderGif.classList.add("chat-gif-preloader")
+    chatPreloaderGif.setAttribute("src","img/chat-preloader.png")
+
+    const chatPreloader = document.createElement("div")
+    chatPreloader.classList.add("chat-preloader")
+    chatPreloader.setAttribute("id", "chat_preloader");
+
+    chat.appendChild(chatPreloader)
+    chatPreloader.appendChild(chatPreloaderGif)
+    
+}
+function clearChatPreloader(){
+    const chatPreloader = document.querySelector("#chat_preloader");
+    chatPreloader.remove();
+}
+
 function drawChat(data){
+
     const messages = document.querySelector(".messages")
     messages.innerHTML = "";
 
@@ -104,6 +128,28 @@ function getChat(personsArticle){
 
                 drawChat(data)
                 
+            }
+        }
+    }
+}
+
+function firstLoadChat(personsArticle){
+    
+    const chat_id = personsArticle.getAttribute("id")
+
+    const HTTP = new XMLHttpRequest();
+    const url = 'http://127.0.0.1:5000/messages/'+ chat_id;
+    HTTP.open("GET", url);
+    HTTP.send();
+
+    HTTP.onreadystatechange = (e) => {
+        if (HTTP.readyState === XMLHttpRequest.DONE) {
+            if (HTTP.status === 200) {
+                const data = JSON.parse(HTTP.responseText)
+
+                drawChat(data)
+                clearChatPreloader()
+                intervalId = setInterval(function () {getChat(personsArticle)}, 3000);
             }
         }
     }
