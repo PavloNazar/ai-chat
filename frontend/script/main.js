@@ -254,3 +254,4 @@ function sendMessage(){
 }
 
 
+function hello(){return "hello"}
