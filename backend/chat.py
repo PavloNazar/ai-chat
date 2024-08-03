@@ -111,7 +111,7 @@ async def post_message():
 
 
 @app.route("/auth", methods = ["POST"])
-async def auth():
+async def auth_changed():
     return "hello"
 
 # passauit
