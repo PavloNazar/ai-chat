@@ -110,6 +110,10 @@ async def post_message():
     return "Message was added"
 
 
+@app.route("/auth", methods = ["POST"])
+async def auth():
+    return "hello"
+
 # passauit
 # async def main():
 #     app.run(debug=True)
